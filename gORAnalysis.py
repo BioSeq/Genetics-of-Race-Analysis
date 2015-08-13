@@ -3,13 +3,15 @@
 from sys import argv
 from sys import exit
 import os
+import uuid
 
 #############  CONSTANTS  #################
 # Files
 REF1 = "HVRI.fasta"
 REF2 = "HVRII.fasta"
-CONFIG = "config3.txt"
+CONFIG = "config2.txt"
 DATA_LOC = "../GeneticsOfRace/"
+OUTPUT = "gorOutput-" + str(uuid.uuid4()) + ".fasta"
 
 # Indexes
 POS_IDX = 1
@@ -47,6 +49,9 @@ def main():
     # Generate the FASTA files
     path = DATA_LOC
     fastaDict = makeFASTAs(path, pairs, ref1, ref2)
+
+    writeOut(fastaDict, pairs)
+
 
 
 # Is given a file name and reads in the nucleotide seq as a string
@@ -198,6 +203,7 @@ def oneInd(ls, pos):
 # Assumes position in each indel list is already an int (not a string)
 # Assumes all multiple alleles have been replaced by a single one (in
 # alternate)
+#TODO: TEST THIS MORE AND DOUBLE CHECK LOGIC
 def addIndels(nucList, indels, exceptions, fileName):
     isDel = False
     # sort indels by position (should already be done, but to be safe)
@@ -208,10 +214,10 @@ def addIndels(nucList, indels, exceptions, fileName):
         # insertion
         if len(variant[REF_IDX]) <= len(variant[ALT_IDX]):
             nucList[variant[POS_IDX] - 1] = variant[ALT_IDX]
-            print "INSERTION"
+   #         print "INSERTION"
         else:  # deletion
             # no. nucleotides deleted
-            print "DELETION", fileName
+    #        print "DELETION", fileName
             isDel = True
             idx = variant[POS_IDX] - 1
             diff = len(variant[REF_IDX]) - len(variant[ALT_IDX])
@@ -222,6 +228,27 @@ def addIndels(nucList, indels, exceptions, fileName):
     nucString = nucString.replace('-', '')
 
     return nucString
+
+
+def writeOut(fastaDict, pairs):
+    filew = open(OUTPUT, 'w')
+    firsts = pairs.keys()
+    for key in firsts:
+        try:
+            keySeq = fastaDict[key] 
+        except KeyError:
+            continue
+        try:
+            valSeq = fastaDict[pairs[key]]
+        except KeyError:
+            continue
+
+        # If you get here, then there are sequences for both key and val
+        filew.write(">" + key + "_" + pairs[key] + "\n")
+        filew.write(keySeq + valSeq + "\n")
+
+    filew.close()
+        
 
         
 if __name__ == '__main__':
