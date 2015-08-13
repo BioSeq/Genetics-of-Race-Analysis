@@ -8,7 +8,7 @@ import os
 # Files
 REF1 = "HVRI.fasta"
 REF2 = "HVRII.fasta"
-CONFIG = "config.txt"
+CONFIG = "config3.txt"
 DATA_LOC = "../GeneticsOfRace/"
 
 # Indexes
@@ -103,9 +103,11 @@ def makeFASTAs(path, pairs, ref1, ref2):
         else:
             continue  # vcf file not in config file, skip it
 
-        print vcf
+
+        #print vcf
         toReturn[nub] = newRef  
-        print newRef
+        #print newRef
+        #print
 
     return toReturn
 
@@ -129,10 +131,13 @@ def makeChanges(seq, vcf, path, isHVRI):
             # make everything upper case so no case clashes
             listL = [x.upper() for x in listL]
 
+            # position should be an int not a string
+            listL[POS_IDX] = int(listL[POS_IDX])
+
             if listL[FILTER_IDX] != PASS:  # Skip vars that don't pass filter
                 continue
 
-            pos = int(listL[POS_IDX])
+            pos = listL[POS_IDX]
             refNuc = oneInd(nucList, pos)
             vcfOldNuc = listL[REF_IDX]
             vcfNewNuc = listL[ALT_IDX]
@@ -140,6 +145,7 @@ def makeChanges(seq, vcf, path, isHVRI):
             # More than one allele, just grab first one
             if "," in vcfNewNuc:
                 vcfNewNuc = vcfNewNuc.split(",")[0]
+                listL[ALT_IDX] = vcfNewNuc
 
 
             # These two lines protect against variants from other regions
@@ -147,6 +153,7 @@ def makeChanges(seq, vcf, path, isHVRI):
             if isHVRI:   # Adjust for offset within file
                 pos = pos - HVRI_OFFSET
                 refNuc = oneInd(nucList, pos)  # Recalc refNuc
+                listL[POS_IDX] = pos
                 if pos < 1:
                     continue
                 
@@ -172,8 +179,7 @@ def makeChanges(seq, vcf, path, isHVRI):
             nucList[pos - 1] = vcfNewNuc
             validSnpPoses.append(pos)
 
-    #    return addIndels(nucList, indelStack, validSnpPoses)
-        return "".join(nucList)
+    return addIndels(nucList, indelStack, validSnpPoses, vcf)
 
 
 
@@ -189,9 +195,33 @@ def oneInd(ls, pos):
 # Inputs a list of characters that represenets a nucleotide sequence
 # a list of Indel intries and a list of positions not to add Indels in
 # as they were already included as SNPs.
-# TODO: Assumes Indels are in the reverse order of the 
-def addIndels(nucList, indelStack, exceptions):
-    return None
+# Assumes position in each indel list is already an int (not a string)
+# Assumes all multiple alleles have been replaced by a single one (in
+# alternate)
+def addIndels(nucList, indels, exceptions, fileName):
+    isDel = False
+    # sort indels by position (should already be done, but to be safe)
+    indels.sort(key=lambda x: x[POS_IDX])
+    indels = [x for x in indels if x[POS_IDX] not in exceptions]
+
+    for variant in indels:
+        # insertion
+        if len(variant[REF_IDX]) <= len(variant[ALT_IDX]):
+            nucList[variant[POS_IDX] - 1] = variant[ALT_IDX]
+            print "INSERTION"
+        else:  # deletion
+            # no. nucleotides deleted
+            print "DELETION", fileName
+            isDel = True
+            idx = variant[POS_IDX] - 1
+            diff = len(variant[REF_IDX]) - len(variant[ALT_IDX])
+            for i in range(idx + 1, idx + diff + 1):
+                nucList[i] = '-'  # Dashes mark a deletion
+
+    nucString = "".join(nucList)
+    nucString = nucString.replace('-', '')
+
+    return nucString
 
         
 if __name__ == '__main__':

@@ -1,0 +1,4 @@
+verified for 2 HVRI files and 1 HVRII files that SNP variants incorporated into
+the right place using BLAST and the references
+
+Verified a deletion and some insertion data. Needs more testing
