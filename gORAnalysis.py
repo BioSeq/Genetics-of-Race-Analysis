@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 
+import Tkinter as tk
 from sys import argv
 from sys import exit
 import os
 import uuid
+import logging
 
 #############  CONSTANTS  #################
 # Files
 REF1 = "HVRI.fasta"
 REF2 = "HVRII.fasta"
 CONFIG = "config2.txt"
-DATA_LOC = "../GeneticsOfRace/"
 OUTPUT = "gorOutput-" + str(uuid.uuid4()) + ".fasta"
+LOG = "/Users/Phippe/Documents/Tufts/BioSeq/appDev/py2app/gor/LOG-"+\
+        str(uuid.uuid4()) + ".txt"
 
 # Indexes
 POS_IDX = 1
@@ -24,10 +27,52 @@ PASS = "PASS"
 
 # Numerical Constants
 HVRI_OFFSET = 15951
-##########################################
+PAD_X = 5
+PAD_Y = 5
+############################################
 
 
-# CUSTOM EXCEPTIONS
+########### CUSTOM CLASES ##################
+# UI
+class UIApp(tk.Frame):
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
+        self.parent = parent
+
+        self.initUI()
+
+    def initUI(self):
+        self.parent.title("BioSeq Analysis")
+        self.grid()
+
+        # Make Labels
+        desc = tk.Label(self, text="Genetics of Race Analysis Program")
+        instr = tk.Label(self, text="File Location")
+
+        # Make entry
+        ent = tk.Entry(self)
+
+        # Make buttons
+        def callbackQuit():
+            exit(0)
+
+        quitButton = tk.Button(self, text="Quit", command=callbackQuit)
+        def callbackOk():
+            fileName = analyze(ent.get())
+            logging.debug("Results writtent out to: " + fileName)
+            exit(0)
+            
+        okButton = tk.Button(self, text="Analyze", command=callbackOk)
+
+        # Grid them
+        desc.grid(row=0, columnspan=2)
+        instr.grid(row=1, column=0)
+        ent.grid(row=1, column=1)
+        okButton.grid(row=2, column=0)
+        quitButton.grid(row=2, column=1, sticky=tk.E)
+
+
+# Custom exceptions
 class UserException(Exception):
     def __init__(self, msg):
         self.msg = msg
@@ -39,18 +84,26 @@ class InternalException(Exception):
         self.msg = msg
     def __str__(self):
         return repr(self.msg)
-
+############################################
 
 def main():
-    ref1 = readInRef(REF1)
-    ref2 = readInRef(REF2)
-    pairs = readInConfig()
+    root = tk.Tk()
+    app = UIApp(root)
+    root.mainloop()
+    exit(0)
+
+
+def analyze(path):
+    ref1 = readInRef(os.path.join(path, REF1))
+    ref2 = readInRef(os.path.join(path, REF2))
+    pairs = readInConfig(path)
 
     # Generate the FASTA files
-    path = DATA_LOC
     fastaDict = makeFASTAs(path, pairs, ref1, ref2)
 
-    writeOut(fastaDict, pairs)
+    writeOut(fastaDict, pairs, path)
+
+    return OUTPUT  # Return file name
 
 
 
@@ -71,10 +124,10 @@ def readInRef(fileName):
 # Reads in the config file into a dictionary so that
 # the first entry is the key and the second entry is
 # the value on each line. Returns a dictionary of this form
-def readInConfig():
+def readInConfig(path):
     dictio = {}
 
-    with open(CONFIG, 'r') as filer:
+    with open(os.path.join(path, CONFIG), 'r') as filer:
         for line in filer:
             listl = line.split(",")
             listl = [x.strip() for x in listl]
@@ -230,8 +283,8 @@ def addIndels(nucList, indels, exceptions, fileName):
     return nucString
 
 
-def writeOut(fastaDict, pairs):
-    filew = open(OUTPUT, 'w')
+def writeOut(fastaDict, pairs, path):
+    filew = open(os.path.join(path, OUTPUT), 'w')
     firsts = pairs.keys()
     for key in firsts:
         try:
@@ -252,4 +305,6 @@ def writeOut(fastaDict, pairs):
 
         
 if __name__ == '__main__':
+    logging.basicConfig(filename=LOG,level=logging.DEBUG)
+    logging.debug('Starting Log')
     main()
