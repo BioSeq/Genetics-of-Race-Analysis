@@ -5,7 +5,6 @@ from sys import argv
 from sys import exit
 import os
 import uuid
-import logging
 
 #############  CONSTANTS  #################
 # Files
@@ -13,8 +12,6 @@ REF1 = "HVRI.fasta"
 REF2 = "HVRII.fasta"
 CONFIG = "config2.txt"
 OUTPUT = "gorOutput-" + str(uuid.uuid4()) + ".fasta"
-LOG = "/Users/Phippe/Documents/Tufts/BioSeq/appDev/py2app/gor/LOG-"+\
-        str(uuid.uuid4()) + ".txt"
 
 # Indexes
 POS_IDX = 1
@@ -54,13 +51,15 @@ class UIApp(tk.Frame):
 
         # Make buttons
         def callbackQuit():
-            exit(0)
+            self.parent.destroy()
 
         quitButton = tk.Button(self, text="Quit", command=callbackQuit)
         def callbackOk():
-            fileName = analyze(ent.get())
-            logging.debug("Results writtent out to: " + fileName)
-            exit(0)
+            path, fileName = analyze(ent.get().strip())
+            self.reportWindow = tk.Toplevel(self.parent)
+            self.app = reportWindow(self.reportWindow, self.parent, path,
+                                                                    fileName)
+            okButton.config(state='disabled')
             
         okButton = tk.Button(self, text="Analyze", command=callbackOk)
 
@@ -70,6 +69,29 @@ class UIApp(tk.Frame):
         ent.grid(row=1, column=1)
         okButton.grid(row=2, column=0)
         quitButton.grid(row=2, column=1, sticky=tk.E)
+
+class reportWindow(tk.Frame):
+    def __init__(self, parent, grandparent, path, fileName):
+        self.parent = parent
+        self.grandparent = grandparent
+        self.path = path
+        self.fileName = fileName
+
+        def callbackQuit():
+            self.parent.destroy()
+            self.grandparent.destroy()  # destroy original window too
+
+        tk.Frame.__init__(self, parent)  # parent constructor
+        desc = tk.Label(self, text="Genetics of Race Analysis Program")
+        desc2 = tk.Label(self, text="Results written to " + self.fileName)
+        desc3 = tk.Label(self, text="The results file is located here: " +\
+                                    self.path)
+        quitButton = tk.Button(self, text="Quit", command=callbackQuit)
+        self.grid()
+        desc.grid()
+        desc2.grid()
+        desc3.grid()
+        quitButton.grid(sticky = tk.E)
 
 
 # Custom exceptions
@@ -94,8 +116,8 @@ def main():
 
 
 def analyze(path):
-    ref1 = readInRef(os.path.join(path, REF1))
-    ref2 = readInRef(os.path.join(path, REF2))
+    ref1 = readInRef(REF1)
+    ref2 = readInRef(REF2)
     pairs = readInConfig(path)
 
     # Generate the FASTA files
@@ -103,7 +125,7 @@ def analyze(path):
 
     writeOut(fastaDict, pairs, path)
 
-    return OUTPUT  # Return file name
+    return (path, OUTPUT)  # return path and output file name
 
 
 
@@ -305,6 +327,4 @@ def writeOut(fastaDict, pairs, path):
 
         
 if __name__ == '__main__':
-    logging.basicConfig(filename=LOG,level=logging.DEBUG)
-    logging.debug('Starting Log')
     main()
