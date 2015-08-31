@@ -29,4 +29,4 @@ We recommend you upload the generated file to [Clustal Omega](http://www.ebi.ac.
 1. Native Windows and Mac OSX Apps containing this analysis are currently in development.
 2. We are interested in networking the app so that it sends the output file directly to Clustal.
 
-Questions? Comments? Don't hesitate to contact us!
+Questions? Comments? Suggestions? Don't hesitate to contact us!
