@@ -1,7 +1,7 @@
 # Genetics of Race Analysis #
 ### BioSeq Group, Tufts University ###
 ##### Program Administrator: Matt Fierman (bioseq@tufts.edu) #####
-##### Author: *Philip Braunstein* (pbraunstein12@gmail.com) #####
+##### Author:##### *Philip Braunstein* (pbraunstein12@gmail.com)
 
 ### Introduction ###
 This package is the analysis package for the Genetics of Race BioSeq project. Launching this script includes a front-end written in Tkinter, so that people unfamiliar with UNIX command line can use this analysis tool.
