@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+#
+# gORAnalysis.py
+# Author: Philip Braunstein
+# Copyright (c) 2015 BioSeq
+# 
+# This is the analysis for the BioSeq Genetics of Race Experiment. It uses VCF
+# files generated from MiSeq to create a FASTA file of what each sample would
+# have looked like. This output file can be run easily analyzed with CLUSTAL
+# Omega to determine similarity between samples and phylogenetic tree.
+#
 
 import Tkinter as tk
 from sys import argv
